@@ -148,9 +148,10 @@
     font-weight: 600; font-size: 1.05rem; overflow: hidden;
   }
   .avatar.big { width: 50px; height: 50px; font-size: 1.25rem; }
+  .avatar svg { width: 100%; height: 100%; display: block; }
   .person-info { flex: 1; min-width: 0; }
-  .person-name { font-weight: 600; font-size: 0.98rem; }
-  .person-status { font-size: 0.79rem; color: var(--ink-soft); margin-top: 0.12rem; }
+  .person-name { display: block; font-weight: 600; font-size: 0.98rem; }
+  .person-status { display: block; font-size: 0.79rem; color: var(--ink-soft); margin-top: 0.12rem; }
   .person-status .plan-line { color: var(--ink); font-weight: 500; }
   .person-meta { font-size: 0.78rem; color: var(--ink-soft); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.15rem; }
   .chip {
@@ -447,14 +448,72 @@
     const color = s === 'late' ? 'var(--late)' : s === 'due' ? 'var(--due)' : 'var(--good)';
     return { color: color, pct: Math.max(8, Math.min(100, Math.round(r * 100))) };
   }
+  /* ---- illustrated portrait avatars, deterministic per name ---- */
+  const FACE_STYLES = ['long', 'short', 'bob', 'bun'];
+  const FACE_HAIR = ['#4a3428', '#2e2620', '#d9b36c', '#7a5638', '#b9b3ab', '#a3552e'];
+  const FACE_SKIN = ['#f2cba6', '#f6d7b0', '#e6b98e', '#c98d5f'];
+  const FACE_SHIRT = ['#a85454', '#4a6785', '#58756a', '#b0764f', '#6b5b8f'];
+  const FACE_BG = ['#d9a7b8', '#a8bfd4', '#a9c8b0', '#b7a8d4', '#dcc19a'];
+  const FRINGE = h => '<path d="M26.5 35 Q26.5 17.5 40 17.5 Q53.5 17.5 53.5 35 Q48.5 24 40 24 Q31.5 24 26.5 35 Z" fill="' + h + '"/>';
+  function personInner(o) {
+    const feat = '<circle cx="34.5" cy="37" r="1.7" fill="#33291f"/><circle cx="45.5" cy="37" r="1.7" fill="#33291f"/>' +
+      '<path d="M35 43.5 Q40 47 45 43.5" stroke="#33291f" stroke-width="1.6" stroke-linecap="round" fill="none"/>';
+    let back = '', front = '';
+    if (o.style === 'long') {
+      back = '<path d="M24 34 Q24 13 40 13 Q56 13 56 34 L56 64 Q56 69 50 69 L30 69 Q24 69 24 64 Z" fill="' + o.hair + '"/>';
+      front = FRINGE(o.hair);
+    } else if (o.style === 'bob') {
+      back = '<path d="M25 34 Q25 14 40 14 Q55 14 55 34 L55 50 Q55 55 49 55 L31 55 Q25 55 25 50 Z" fill="' + o.hair + '"/>';
+      front = FRINGE(o.hair);
+    } else if (o.style === 'bun') {
+      back = '<circle cx="40" cy="15" r="8" fill="' + o.hair + '"/>';
+      front = FRINGE(o.hair);
+    } else {
+      front = '<path d="M26 33 Q26 16 40 16 Q54 16 54 33 Q52 23 40 22.5 Q28 23 26 33 Z" fill="' + o.hair + '"/>';
+    }
+    return back +
+      '<ellipse cx="40" cy="83" rx="27" ry="21" fill="' + o.shirt + '"/>' +
+      '<circle cx="40" cy="38" r="15.5" fill="' + o.skin + '"/>' + front + feat;
+  }
+  const svgOpen = bg => '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><rect width="80" height="80" fill="' + bg + '"/>';
+  function photoSingle(bg, o) { return svgOpen(bg) + personInner(o) + '</svg>'; }
+  function photoPair(bg, a, b) {
+    return svgOpen(bg) +
+      '<g transform="translate(-8,5) scale(0.85)">' + personInner(a) + '</g>' +
+      '<g transform="translate(16,10) scale(0.8)">' + personInner(b) + '</g></svg>';
+  }
+  function photoTrio(bg, a, b, c) {
+    return svgOpen(bg) +
+      '<g transform="translate(1,3) scale(0.62)">' + personInner(a) + '</g>' +
+      '<g transform="translate(27,3) scale(0.62)">' + personInner(b) + '</g>' +
+      '<g transform="translate(14,19) scale(0.66)">' + personInner(c) + '</g></svg>';
+  }
+  function seededRand(seed) {
+    let t = seed >>> 0;
+    return function () {
+      t += 0x6D2B79F5;
+      let r = Math.imul(t ^ (t >>> 15), 1 | t);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function photoFor(p) {
+    let seed = 0;
+    for (let i = 0; i < p.name.length; i++) seed = (seed * 31 + p.name.charCodeAt(i)) >>> 0;
+    const rnd = seededRand(seed);
+    const pick = arr => arr[Math.floor(rnd() * arr.length)];
+    const face = () => ({ style: pick(FACE_STYLES), hair: pick(FACE_HAIR), skin: pick(FACE_SKIN), shirt: pick(FACE_SHIRT) });
+    const bg = pick(FACE_BG);
+    const n = p.members ? p.members.length : 1;
+    if (n >= 3) return photoTrio(bg, face(), face(), face());
+    if (n === 2) return photoPair(bg, face(), face());
+    return photoSingle(bg, face());
+  }
+
   function avatarHtml(p, big) {
     const spec = ringSpec(p);
-    const hue = p.hue != null ? p.hue : hueOf(p.name);
-    const bg = 'color-mix(in oklab, hsl(' + hue + ' 60% 55%) 22%, var(--card))';
-    const fg = 'color-mix(in oklab, hsl(' + hue + ' 65% 45%) 70%, var(--ink))';
     return '<span class="ring" style="background: conic-gradient(' + spec.color + ' ' + spec.pct + '%, var(--line) 0)">' +
-      '<span class="avatar' + (big ? ' big' : '') + '" style="background:' + bg + '; color:' + fg + '">' +
-      (p.members ? '👥' : esc(initials(p.name))) + '</span></span>';
+      '<span class="avatar' + (big ? ' big' : '') + '">' + photoFor(p) + '</span></span>';
   }
   function memberChip(name, pickable, on) {
     const bg = 'color-mix(in oklab, hsl(' + hueOf(name) + ' 60% 55%) 25%, var(--card))';
