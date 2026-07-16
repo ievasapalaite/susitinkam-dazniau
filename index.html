@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en">
+<meta name="theme-color" content="#2e5e4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dažniau">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Susitinkam dažniau</title>
+<style>
+  :root {
+    --paper: #eef0ea;
+    --screen: #f7f8f4;
+    --card: #ffffff;
+    --ink: #20261f;
+    --ink-soft: #5b6552;
+    --spruce: #2e5e4a;
+    --spruce-ink: #24503e;
+    --spruce-soft: #e2ebde;
+    --amber: #b97f1e;
+    --amber-soft: #f6ecd2;
+    --line: #dde2d6;
+    --good: #2e7d4f;
+    --due: #c98d1f;
+    --late: #b5502c;
+    --shadow: 0 18px 50px rgba(32, 38, 31, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #11140f; --screen: #191e17; --card: #21281f;
+      --ink: #e6e9e0; --ink-soft: #9aa48f;
+      --spruce: #8cc2a6; --spruce-ink: #a4d4ba; --spruce-soft: #26332b;
+      --amber: #dcae52; --amber-soft: #3a3320;
+      --line: #333d2f;
+      --good: #6fbf8f; --due: #dcae52; --late: #d97f57;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #11140f; --screen: #191e17; --card: #21281f;
+    --ink: #e6e9e0; --ink-soft: #9aa48f;
+    --spruce: #8cc2a6; --spruce-ink: #a4d4ba; --spruce-soft: #26332b;
+    --amber: #dcae52; --amber-soft: #3a3320;
+    --line: #333d2f;
+    --good: #6fbf8f; --due: #dcae52; --late: #d97f57;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #eef0ea; --screen: #f7f8f4; --card: #ffffff;
+    --ink: #20261f; --ink-soft: #5b6552;
+    --spruce: #2e5e4a; --spruce-ink: #24503e; --spruce-soft: #e2ebde;
+    --amber: #b97f1e; --amber-soft: #f6ecd2;
+    --line: #dde2d6;
+    --good: #2e7d4f; --due: #c98d1f; --late: #b5502c;
+    --shadow: 0 18px 50px rgba(32, 38, 31, 0.16);
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.45;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--screen);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  @media (min-width: 520px) {
+    .app {
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+  }
+
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; text-align: inherit; }
+  button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--spruce); outline-offset: 2px; border-radius: 6px;
+  }
+
+  .app-bar { padding: 1.1rem 1.2rem 0.4rem; display: flex; align-items: center; gap: 0.6rem; }
+  .app-name {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .bar-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; flex: none;
+    border: 1px solid var(--line); background: var(--card);
+  }
+  .bar-btn.add { margin-left: auto; background: var(--spruce); border-color: var(--spruce); color: #fff; font-size: 1.3rem; }
+  :root[data-theme="dark"] .bar-btn.add { color: #14201a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bar-btn.add { color: #14201a; } }
+
+  .stats { display: flex; gap: 0.4rem; padding: 0.35rem 1.2rem 0.55rem; flex-wrap: wrap; }
+  .stat {
+    font-size: 0.74rem; color: var(--ink-soft);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 99px; padding: 0.18rem 0.65rem 0.18rem 0.5rem;
+    display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
+  }
+  .stat i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+  .stat i.good { background: var(--good); }
+  .stat i.due { background: var(--due); }
+  .stat i.late { background: var(--late); }
+
+  .private-note {
+    margin: 0 1.2rem 0.6rem; font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-soft);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .storage-warn {
+    margin: 0 1.2rem 0.6rem; font-size: 0.78rem; color: var(--late);
+  }
+
+  .list { flex: 1; padding: 0 1rem 6rem; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--ink-soft); margin: 1rem 0.2rem 0.5rem;
+  }
+  .section-label.reach { color: var(--amber); }
+
+  .person {
+    width: 100%; background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 0.8rem 0.9rem; margin-bottom: 0.55rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    transition: transform 0.12s ease;
+  }
+  .person:active { transform: scale(0.985); }
+
+  .ring { width: 50px; height: 50px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .avatar {
+    width: 41px; height: 41px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-weight: 600; font-size: 1.05rem; overflow: hidden;
+  }
+  .avatar.big { width: 50px; height: 50px; font-size: 1.25rem; }
+  .person-info { flex: 1; min-width: 0; }
+  .person-name { font-weight: 600; font-size: 0.98rem; }
+  .person-status { font-size: 0.79rem; color: var(--ink-soft); margin-top: 0.12rem; }
+  .person-status .plan-line { color: var(--ink); font-weight: 500; }
+  .person-meta { font-size: 0.78rem; color: var(--ink-soft); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.15rem; }
+  .chip {
+    font-size: 0.7rem; color: var(--spruce-ink); background: var(--spruce-soft);
+    border-radius: 99px; padding: 0.05rem 0.5rem; white-space: nowrap;
+  }
+
+  /* welcome */
+  .welcome { padding: 2.5rem 1.6rem; text-align: center; }
+  .welcome h1 {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: 1.9rem; font-weight: 600; margin: 0 0 0.4rem; text-wrap: balance;
+  }
+  .welcome .tag-line {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-style: italic; color: var(--amber); margin: 0 0 1rem;
+  }
+  .welcome p { color: var(--ink-soft); font-size: 0.95rem; max-width: 24rem; margin: 0 auto 1.6rem; }
+
+  /* sheet */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(20, 26, 19, 0.45);
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 10;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: 100%; max-width: 480px;
+    background: var(--screen);
+    border-radius: 22px 22px 0 0;
+    padding: 0.9rem 1.2rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
+    transform: translateY(30px); transition: transform 0.22s ease;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .overlay.open .sheet { transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet, .overlay, .person, .toast { transition: none !important; }
+  }
+  .grabber { width: 38px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto 0.9rem; }
+
+  .sheet h2 {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: 1.35rem; font-weight: 600; margin: 0 0 0.15rem;
+  }
+  .sheet .sub { font-size: 0.85rem; color: var(--ink-soft); margin: 0 0 0.9rem; }
+  .sheet-head { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; }
+  .sheet-head h2, .sheet-head .sub { margin: 0; }
+
+  .private-box {
+    background: var(--card); border: 1px dashed var(--line); border-radius: 12px;
+    padding: 0.7rem 0.9rem; font-size: 0.85rem; margin-bottom: 1rem;
+  }
+  .pb-label {
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 0.35rem;
+    display: flex; gap: 0.35rem; align-items: center;
+  }
+  .pb-row { display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center; }
+
+  .plan-box { background: var(--spruce-soft); border-radius: 12px; padding: 0.7rem 0.9rem; font-size: 0.88rem; margin-bottom: 1rem; }
+  .plan-box .cal-ok { display: block; font-size: 0.76rem; color: var(--spruce-ink); margin-top: 0.25rem; }
+  .note-box { background: var(--amber-soft); border-radius: 12px; padding: 0.7rem 0.9rem; font-size: 0.88rem; margin-bottom: 1rem; }
+  .note-box .pb-label { color: var(--amber); }
+  .note-box .note-edit { display: block; margin-top: 0.4rem; font-size: 0.78rem; color: var(--amber); font-weight: 600; text-decoration: underline; }
+  .add-note { font-size: 0.85rem; color: var(--ink-soft); text-decoration: underline; padding: 0 0 0.6rem; }
+
+  .actions { display: grid; gap: 0.55rem; margin-top: 0.9rem; }
+  .btn {
+    border-radius: 12px; padding: 0.8rem 1rem; font-weight: 600; font-size: 0.95rem;
+    text-align: center; border: 1px solid var(--line); background: var(--card);
+  }
+  .btn.primary { background: var(--spruce); color: #fff; border-color: var(--spruce); }
+  :root[data-theme="dark"] .btn.primary { color: #14201a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #14201a; } }
+  .btn.quiet { color: var(--ink-soft); font-weight: 500; }
+  .btn.danger { color: var(--late); }
+  .btn:active { transform: scale(0.985); }
+
+  .compose-msg {
+    width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 0.8rem 0.9rem; font: inherit; font-size: 0.95rem; color: var(--ink);
+    resize: none; min-height: 4.2rem;
+  }
+  .field-label {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 1rem 0 0.4rem;
+    display: flex; align-items: baseline; gap: 0.4rem;
+  }
+  .field-label small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .slots { display: grid; gap: 0.45rem; }
+  .slot {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 0.55rem 0.6rem 0.55rem 0.85rem; font-size: 0.92rem;
+  }
+  .slot .slot-main { display: flex; align-items: center; gap: 0.6rem; flex: 1; cursor: pointer; }
+  .slot .tick {
+    width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #fff; flex: none;
+  }
+  .slot.on { border-color: var(--spruce); }
+  .slot.on .tick { background: var(--spruce); border-color: var(--spruce); }
+  :root[data-theme="dark"] .slot.on .tick { color: #14201a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .slot.on .tick { color: #14201a; } }
+  .slot .part { color: var(--ink-soft); font-size: 0.8rem; }
+  .time-pill {
+    margin-left: auto; font-size: 0.82rem; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: var(--spruce-ink);
+    background: var(--spruce-soft); border-radius: 99px; padding: 0.22rem 0.6rem;
+    white-space: nowrap; flex: none;
+  }
+  .add-slot { font-size: 0.85rem; color: var(--spruce); font-weight: 600; padding: 0.4rem 0.2rem; }
+  .custom-slot { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+  .custom-slot select, .custom-slot input {
+    font: inherit; font-size: 0.88rem; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.45rem 0.55rem;
+  }
+  .custom-slot select { flex: 1; min-width: 0; }
+  .custom-slot .btn { padding: 0.45rem 0.8rem; font-size: 0.85rem; }
+
+  .places { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .place {
+    font-size: 0.84rem; border: 1.5px solid var(--line); background: var(--card);
+    border-radius: 99px; padding: 0.35rem 0.8rem; white-space: nowrap;
+  }
+  .place.on { border-color: var(--spruce); background: var(--spruce-soft); color: var(--spruce-ink); font-weight: 600; }
+  .compose-note { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.9rem; }
+
+  .preview-box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 0.8rem 0.9rem; font-size: 0.9rem; white-space: pre-wrap; margin-bottom: 0.4rem;
+  }
+
+  .center-state { text-align: center; padding: 1.4rem 0.6rem 0.4rem; }
+  .big-mark {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--spruce-soft); color: var(--spruce-ink); font-size: 1.7rem;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 0.9rem;
+  }
+  .center-state h2 { margin-bottom: 0.3rem; }
+  .center-state p { font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 0.4rem; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 1.2rem;
+    transform: translate(-50%, 20px);
+    background: var(--ink); color: var(--screen);
+    font-size: 0.85rem; padding: 0.7rem 1.1rem; border-radius: 12px;
+    box-shadow: var(--shadow); opacity: 0; transition: all 0.25s ease;
+    z-index: 30; max-width: 88%; text-align: center; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .form-grid { display: grid; gap: 0.7rem; }
+  .form-grid label { font-size: 0.78rem; color: var(--ink-soft); display: grid; gap: 0.3rem; }
+  .form-grid input, .form-grid select {
+    font: inherit; font-size: 0.95rem; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.65rem 0.8rem; width: 100%;
+  }
+
+  .members { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .member {
+    display: flex; align-items: center; gap: 0.45rem;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 99px;
+    padding: 0.22rem 0.75rem 0.22rem 0.28rem; font-size: 0.84rem;
+  }
+  .member .mini {
+    width: 23px; height: 23px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 600;
+    font-family: "Iowan Old Style", Palatino, Georgia, serif; flex: none;
+  }
+  .member.pick { cursor: pointer; }
+  .member.pick.on { border-color: var(--spruce); background: var(--spruce-soft); color: var(--spruce-ink); font-weight: 600; }
+
+  .seg { display: flex; gap: 0.4rem; margin-bottom: 0.9rem; }
+  .seg button {
+    flex: 1; border: 1.5px solid var(--line); background: var(--card);
+    border-radius: 10px; padding: 0.5rem; font-weight: 600; font-size: 0.88rem; text-align: center;
+  }
+  .seg button.on { border-color: var(--spruce); background: var(--spruce-soft); color: var(--spruce-ink); }
+
+  .settings-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; }
+  .settings-row .grow { flex: 1; min-width: 0; }
+  .x-btn { color: var(--late); font-weight: 700; padding: 0.2rem 0.5rem; }
+</style>
+
+<div class="app" id="app"></div>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  const KEY = 'susitinkam-dazniau-v1';
+  const DAY = 24 * 60 * 60 * 1000;
+
+  /* ---------- storage ---------- */
+  let storageOk = true;
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { storageOk = false; return null; }
+  }
+  function save() {
+    if (!S) return;
+    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch (e) { storageOk = false; }
+  }
+  let S = loadState();
+
+  /* ---------- date utils ---------- */
+  function todayISO() { return toISO(new Date()); }
+  function toISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function fromISO(iso) { const p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function daysSinceISO(iso) { return Math.round((fromISO(todayISO()) - fromISO(iso)) / DAY); }
+  function addDaysISO(iso, n) { const d = fromISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+  const EN_D = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const EN_M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const LT_D = ['Sk', 'Pr', 'An', 'Tr', 'Kt', 'Pn', 'Št'];
+  const LT_M = ['sausio', 'vasario', 'kovo', 'balandžio', 'gegužės', 'birželio', 'liepos', 'rugpjūčio', 'rugsėjo', 'spalio', 'lapkričio', 'gruodžio'];
+  function fmtDay(iso) { const d = fromISO(iso); return EN_D[d.getDay()] + ', ' + EN_M[d.getMonth()] + ' ' + d.getDate(); }
+  function fmtLT(iso) { const d = fromISO(iso); return LT_D[d.getDay()] + ', ' + LT_M[d.getMonth()] + ' ' + d.getDate() + ' d.'; }
+  function nextDow(dow, minOffset) { // next date with given day-of-week, at least minOffset days away
+    const t = fromISO(todayISO());
+    for (let i = (minOffset || 1); i <= 14 + (minOffset || 1); i++) {
+      const d = new Date(t.getTime() + i * DAY);
+      if (d.getDay() === dow) return toISO(d);
+    }
+    return addDaysISO(todayISO(), 7);
+  }
+
+  /* ---------- misc utils ---------- */
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function uid() { return 'p' + Date.now() + Math.floor(Math.random() * 1000); }
+  function initials(name) { return name.trim()[0].toUpperCase(); }
+  function hueOf(name) { let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
+  function firstName(p) { return p.name.split(' ')[0]; }
+
+  function fmtRhythm(days) {
+    if (days === 7) return 'every week';
+    if (days === 14) return 'every 2 weeks';
+    if (days === 21) return 'every 3 weeks';
+    if (days === 30) return 'monthly';
+    if (days === 42) return 'every 6 weeks';
+    if (days === 90) return 'quarterly';
+    if (days === 180) return 'twice a year';
+    return 'every ' + days + ' days';
+  }
+
+  /* ---------- status engine ---------- */
+  function statusOf(p) {
+    if (p.plan) return daysSinceISO(p.plan.dateISO) > 0 ? 'past-plan' : 'booked';
+    if (p.invite) return 'invited';
+    if (p.snooze && daysSinceISO(p.snooze) < 0) return 'zzz';
+    if (!p.lastMet) return 'due';
+    const r = daysSinceISO(p.lastMet) / p.rhythm;
+    if (r >= 1.35) return 'late';
+    if (r >= 0.85) return 'due';
+    return 'good';
+  }
+  function fmtSince(p) {
+    const s = statusOf(p);
+    if (s === 'booked') return (p.plan.emoji || '☕') + ' ' + p.plan.what + ' · ' + fmtDay(p.plan.dateISO) + ' · ' + p.plan.time;
+    if (s === 'past-plan') return 'plan date passed — did you meet?';
+    if (s === 'invited') return '✉️ invited · waiting for a reply';
+    if (s === 'zzz') return 'resting until ' + fmtDay(p.snooze);
+    if (!p.lastMet) return 'no meetings logged yet';
+    const d = daysSinceISO(p.lastMet);
+    if (d === 0) return 'seen today';
+    if (d === 1) return 'seen yesterday';
+    if (d < 60) return 'seen ' + d + ' days ago';
+    return 'seen ' + Math.round(d / 30) + ' months ago';
+  }
+  function statusText(p) {
+    const s = statusOf(p);
+    if (s === 'late') return ' · rhythm broken';
+    if (s === 'due') return p.lastMet ? ' · time to reach out' : ' · start the rhythm';
+    if (s === 'good') return ' · on rhythm';
+    return '';
+  }
+  function ringSpec(p) {
+    const s = statusOf(p);
+    if (s === 'booked') return { color: 'var(--good)', pct: 100 };
+    if (s === 'past-plan') return { color: 'var(--due)', pct: 100 };
+    if (s === 'invited') return { color: 'var(--spruce)', pct: 100 };
+    if (s === 'zzz') return { color: 'var(--line)', pct: 100 };
+    if (!p.lastMet) return { color: 'var(--due)', pct: 60 };
+    const r = daysSinceISO(p.lastMet) / p.rhythm;
+    const color = s === 'late' ? 'var(--late)' : s === 'due' ? 'var(--due)' : 'var(--good)';
+    return { color: color, pct: Math.max(8, Math.min(100, Math.round(r * 100))) };
+  }
+  function avatarHtml(p, big) {
+    const spec = ringSpec(p);
+    const hue = p.hue != null ? p.hue : hueOf(p.name);
+    const bg = 'color-mix(in oklab, hsl(' + hue + ' 60% 55%) 22%, var(--card))';
+    const fg = 'color-mix(in oklab, hsl(' + hue + ' 65% 45%) 70%, var(--ink))';
+    return '<span class="ring" style="background: conic-gradient(' + spec.color + ' ' + spec.pct + '%, var(--line) 0)">' +
+      '<span class="avatar' + (big ? ' big' : '') + '" style="background:' + bg + '; color:' + fg + '">' +
+      (p.members ? '👥' : esc(initials(p.name))) + '</span></span>';
+  }
+  function memberChip(name, pickable, on) {
+    const bg = 'color-mix(in oklab, hsl(' + hueOf(name) + ' 60% 55%) 25%, var(--card))';
+    return '<span class="member' + (pickable ? ' pick' : '') + (on ? ' on' : '') + '"' +
+      (pickable ? ' role="button" tabindex="0" data-name="' + esc(name) + '"' : '') + '>' +
+      '<span class="mini" style="background:' + bg + '">' + esc(initials(name)) + '</span>' + esc(name) + (on ? ' ✓' : '') + '</span>';
+  }
+
+  /* ---------- example data ---------- */
+  function exampleState() {
+    return {
+      me: { name: 'Ieva' },
+      places: ['☕ Huracán Coffee', '🌳 Bernardinų sodas', '🍽️ Pas mane'],
+      people: [
+        { id: uid() + 'a', name: 'Mama & Tėtis', members: ['Mama', 'Tėtis'], hue: 30, tag: 'šeima', rhythm: 7, lastMet: addDaysISO(todayISO(), -3) },
+        { id: uid() + 'b', name: 'Rūta', hue: 340, tag: 'artimos draugės', rhythm: 21, lastMet: addDaysISO(todayISO(), -25),
+          note: 'Ruošėsi pokalbiui dėl naujo darbo — paklausk, kaip pavyko!' },
+        { id: uid() + 'c', name: 'Tomas & Eglė', members: ['Tomas', 'Eglė'], hue: 210, tag: 'draugai', rhythm: 30, lastMet: addDaysISO(todayISO(), -12),
+          plan: { what: 'Vakarienė', emoji: '🍽️', dateISO: addDaysISO(todayISO(), 8), time: '19:00', place: 'pas juos' } },
+        { id: uid() + 'd', name: 'Uni draugai', members: ['Andrius', 'Milda', 'Karolis', 'Dovilė'], hue: 262, tag: 'senos draugystės', rhythm: 90, lastMet: addDaysISO(todayISO(), -210) },
+        { id: uid() + 'e', name: 'Greta', hue: 160, tag: 'darbo draugė', rhythm: 42, lastMet: addDaysISO(todayISO(), -19) },
+      ],
+    };
+  }
+
+  /* ---------- dom ---------- */
+  const app = document.getElementById('app');
+  const overlay = document.getElementById('overlay');
+  const sheet = document.getElementById('sheet');
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+  }
+  function openSheet(html) { sheet.innerHTML = '<div class="grabber"></div>' + html; overlay.classList.add('open'); }
+  function closeSheet() { overlay.classList.remove('open'); }
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeSheet(); });
+
+  /* ---------- clipboard / share ---------- */
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => copyFallback(text));
+    }
+    return Promise.resolve(copyFallback(text));
+  }
+  function copyFallback(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  /* ---------- ics ---------- */
+  function icsFor(p) {
+    const plan = p.plan;
+    const dt = plan.dateISO.replace(/-/g, '');
+    const hm = plan.time.split(':');
+    const start = dt + 'T' + String(hm[0]).padStart(2, '0') + String(hm[1] || '00').padStart(2, '0') + '00';
+    const endD = new Date(fromISO(plan.dateISO).getTime());
+    endD.setHours(+hm[0], +(hm[1] || 0) + 90);
+    const end = toISO(endD).replace(/-/g, '') + 'T' + String(endD.getHours()).padStart(2, '0') + String(endD.getMinutes()).padStart(2, '0') + '00';
+    const lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Susitinkam daugiau//LT',
+      'BEGIN:VEVENT',
+      'UID:' + p.id + '-' + dt + '@susitinkam',
+      'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+      'DTSTART:' + start,
+      'DTEND:' + end,
+      'SUMMARY:' + plan.what + ' — ' + p.name,
+      plan.place ? 'LOCATION:' + plan.place : null,
+      'END:VEVENT', 'END:VCALENDAR',
+    ].filter(Boolean);
+    return lines.join('\r\n');
+  }
+  function download(filename, text, type) {
+    const blob = new Blob([text], { type: type || 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  /* ---------- main render ---------- */
+  function render() {
+    if (!S) { renderWelcome(); return; }
+    save();
+    const reach = S.people.filter(p => ['due', 'late', 'past-plan'].includes(statusOf(p)))
+      .sort((a, b) => (daysSinceISO(b.lastMet || todayISO()) / b.rhythm) - (daysSinceISO(a.lastMet || todayISO()) / a.rhythm));
+    const waiting = S.people.filter(p => statusOf(p) === 'invited');
+    const rest = S.people.filter(p => !reach.includes(p) && !waiting.includes(p));
+
+    const counts = { good: 0, due: 0, late: 0, booked: 0 };
+    S.people.forEach(p => {
+      const s = statusOf(p);
+      if (s === 'good' || s === 'zzz') counts.good++;
+      else if (s === 'due' || s === 'past-plan') counts.due++;
+      else if (s === 'late') counts.late++;
+      else if (s === 'booked') counts.booked++;
+    });
+
+    let html =
+      '<header class="app-bar">' +
+      '<span class="app-name">Susitinkam dažniau</span>' +
+      '<button class="bar-btn add" id="addBtn" aria-label="Add a person or group">+</button>' +
+      '<button class="bar-btn" id="settingsBtn" aria-label="Settings">⚙︎</button>' +
+      '</header>' +
+      '<div class="stats">' +
+      '<span class="stat"><i class="good"></i>' + (counts.good + counts.booked) + ' on rhythm</span>' +
+      (counts.due ? '<span class="stat"><i class="due"></i>' + counts.due + ' waiting</span>' : '') +
+      (counts.late ? '<span class="stat"><i class="late"></i>' + counts.late + ' overdue</span>' : '') +
+      (counts.booked ? '<span class="stat">📅 ' + counts.booked + ' planned</span>' : '') +
+      '</div>' +
+      '<div class="private-note">🔒 Rhythms, tags &amp; notes — only you see this</div>' +
+      (storageOk ? '' : '<div class="storage-warn">⚠️ Storage unavailable in this browser view — changes won’t survive a reload. Open the file directly in your browser for full persistence.</div>') +
+      '<main class="list" id="list">';
+
+    if (!S.people.length) {
+      html += '<div class="welcome" style="padding-top:3rem"><p>Start small: add the 5 people you keep meaning to see.</p>' +
+        '<div class="actions" style="max-width:16rem;margin:0 auto"><button class="btn primary" id="emptyAdd">＋ Add someone</button></div></div>';
+    } else {
+      if (reach.length) { html += '<div class="section-label reach">Time to reach out</div>' + reach.map(row).join(''); }
+      if (waiting.length) { html += '<div class="section-label">Waiting for a reply</div>' + waiting.map(row).join(''); }
+      if (rest.length) { html += '<div class="section-label">On rhythm</div>' + rest.map(row).join(''); }
+    }
+    html += '</main>';
+    app.innerHTML = html;
+
+    document.getElementById('addBtn').addEventListener('click', () => openAddSheet());
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
+    const ea = document.getElementById('emptyAdd');
+    if (ea) ea.addEventListener('click', () => openAddSheet());
+    app.querySelectorAll('.person').forEach(btn => btn.addEventListener('click', () => openPerson(btn.dataset.id)));
+  }
+
+  function row(p) {
+    const since = fmtSince(p);
+    const highlight = ['booked', 'invited', 'past-plan'].includes(statusOf(p));
+    return '<button class="person" data-id="' + p.id + '">' +
+      avatarHtml(p) +
+      '<span class="person-info">' +
+      '<span class="person-name">' + esc(p.name) + '</span>' +
+      '<span class="person-status">' + (highlight ? '<span class="plan-line">' + esc(since) + '</span>' : esc(since) + esc(statusText(p))) + '</span>' +
+      '<span class="person-meta">' +
+      (p.members ? '<span class="chip">👥 ' + p.members.length + '</span>' : '') +
+      '<span class="chip">' + esc(fmtRhythm(p.rhythm)) + '</span><span class="chip">' + esc(p.tag) + '</span></span>' +
+      '</span></button>';
+  }
+
+  function renderWelcome() {
+    app.innerHTML =
+      '<div class="welcome" style="margin-top:14vh">' +
+      '<h1>Susitinkam dažniau</h1>' +
+      '<p class="tag-line">We should meet more often — this time for real.</p>' +
+      '<p>Set a private rhythm for each person you love — how often you’d genuinely like to meet. The app watches the rhythms and helps you reach out before "kada nors" becomes never.</p>' +
+      '<div class="actions" style="max-width:18rem;margin:0 auto">' +
+      '<button class="btn primary" id="startFresh">Start fresh</button>' +
+      '<button class="btn" id="startExample">Try with example data</button>' +
+      '</div></div>';
+    document.getElementById('startFresh').addEventListener('click', () => { S = { me: { name: '' }, places: ['☕ Kava mieste'], people: [] }; askName(); });
+    document.getElementById('startExample').addEventListener('click', () => { S = exampleState(); save(); render(); showToast('Example rhythms loaded — make them yours.'); });
+  }
+
+  function askName() {
+    openSheet(
+      '<h2>Kas tu? 🙂</h2>' +
+      '<p class="sub">Your name signs the invites you send.</p>' +
+      '<div class="form-grid"><label>Your name<input id="meName" maxlength="30" placeholder="e.g. Ieva"></label></div>' +
+      '<div class="actions"><button class="btn primary" id="meSave">Let’s go</button></div>'
+    );
+    document.getElementById('meSave').addEventListener('click', () => {
+      S.me.name = document.getElementById('meName').value.trim() || 'Aš';
+      save(); closeSheet(); render();
+    });
+  }
+
+  /* ---------- person sheet ---------- */
+  function openPerson(id) {
+    const p = S.people.find(x => x.id === id);
+    if (!p) return;
+    const s = statusOf(p);
+    openSheet(
+      '<div class="sheet-head">' + avatarHtml(p, true) +
+      '<div><h2>' + esc(p.name) + '</h2><p class="sub">' + esc(fmtSince(p)) + '</p></div></div>' +
+      (s === 'booked'
+        ? '<div class="plan-box">' + (p.plan.emoji || '☕') + ' <strong>' + esc(p.plan.what) + '</strong> · ' + esc(fmtDay(p.plan.dateISO)) + ' · ' + esc(p.plan.time) +
+          (p.plan.place ? ' · 📍 ' + esc(p.plan.place) : '') +
+          '<span class="cal-ok">📅 <button style="text-decoration:underline;color:var(--spruce-ink);font-weight:600" id="icsBtn">Add to calendar (.ics)</button></span></div>'
+        : '') +
+      (s === 'invited'
+        ? '<div class="plan-box">✉️ Invite sent ' + esc(fmtDay(p.invite.sentISO)) + ' with ' + p.invite.slots.length + ' time option' + (p.invite.slots.length > 1 ? 's' : '') +
+          (p.invite.place ? ' · 📍 ' + esc(p.invite.place) : '') + '</div>'
+        : '') +
+      (p.members
+        ? '<div class="field-label" style="margin-top:0.2rem">Who’s in <small>— ' + p.members.length + ' žmonės</small></div>' +
+          '<div class="members" style="margin-bottom:1rem">' + p.members.map(m => memberChip(m)).join('') + '</div>'
+        : '') +
+      (p.note
+        ? '<div class="note-box"><div class="pb-label">📝 From last time — only you see this</div>' + esc(p.note) +
+          '<button class="note-edit" id="noteEdit">Edit note</button></div>'
+        : (p.lastMet ? '<button class="add-note" id="noteAdd">＋ Add a note from last time</button>' : '')) +
+      '<div class="private-box"><div class="pb-label">🔒 Private — never shared</div>' +
+      '<div class="pb-row"><span class="chip">' + esc(fmtRhythm(p.rhythm)) + '</span><span class="chip">' + esc(p.tag) + '</span></div></div>' +
+      '<div class="actions">' +
+      (s === 'invited'
+        ? '<button class="btn primary" id="actReply">✅ &nbsp;They picked a time</button>' +
+          '<button class="btn" id="actReinvite">✏️ &nbsp;New invite — different times</button>' +
+          '<button class="btn quiet" id="actCancelInvite">Cancel invite</button>'
+        : s === 'past-plan'
+          ? '<button class="btn primary" id="actHappened">🎉 &nbsp;We met!</button>' +
+            '<button class="btn quiet" id="actNotHappened">It didn’t happen</button>'
+          : s === 'booked'
+            ? '<button class="btn" id="actMet">🤝 &nbsp;We already met — log it</button>'
+            : '<button class="btn primary" id="actPropose">✉️ &nbsp;Suggest a time</button>' +
+              '<button class="btn" id="actMet">🤝 &nbsp;We just met — reset rhythm</button>' +
+              '<button class="btn quiet" id="actSnooze">😴 &nbsp;Life is full right now — rest 2 weeks</button>') +
+      '<button class="btn quiet" id="actEdit">Edit ' + (p.members ? 'group' : 'person') + '…</button>' +
+      '</div>'
+    );
+
+    const on = (id2, fn) => { const el = document.getElementById(id2); if (el) el.addEventListener('click', fn); };
+    on('actPropose', () => openComposer(p));
+    on('actReinvite', () => { openComposer(p); });
+    on('noteEdit', () => openNotePrompt(p, false));
+    on('noteAdd', () => openNotePrompt(p, false));
+    on('icsBtn', () => { download('susitikimas-' + firstName(p).toLowerCase() + '.ics', icsFor(p), 'text/calendar'); showToast('📅 Calendar file downloaded'); });
+    on('actMet', () => { logMeeting(p, todayISO()); });
+    on('actHappened', () => { const d = p.plan.dateISO; p.plan = null; logMeeting(p, d); });
+    on('actNotHappened', () => { p.plan = null; save(); render(); openPerson(p.id); showToast('Plan cleared — ' + firstName(p) + ' is back in your feed.'); });
+    on('actSnooze', () => { p.snooze = addDaysISO(todayISO(), 14); save(); closeSheet(); render(); showToast(p.name + ' is resting until ' + fmtDay(p.snooze) + '. No guilt.'); });
+    on('actReply', () => openConfirmReply(p));
+    on('actCancelInvite', () => { p.invite = null; save(); render(); openPerson(p.id); });
+    on('actEdit', () => openEditSheet(p));
+  }
+
+  function logMeeting(p, dateISO) {
+    p.lastMet = dateISO; p.plan = null; p.invite = null; p.snooze = null;
+    save(); render();
+    openNotePrompt(p, true);
+  }
+
+  /* ---------- notes ---------- */
+  function openNotePrompt(p, afterMeet) {
+    openSheet(
+      '<h2>' + (afterMeet ? 'Nice — rhythm reset 🌱' : 'Note about ' + esc(p.name)) + '</h2>' +
+      '<p class="sub">Anything to remember for next time? Only you ever see this.</p>' +
+      '<textarea class="compose-msg" id="noteText" placeholder="e.g. minėjo, kad keičia darbą — paklausk kitą kartą">' + esc(p.note || '') + '</textarea>' +
+      '<div class="actions"><button class="btn primary" id="noteSave">Save note</button>' +
+      '<button class="btn quiet" id="noteSkip">' + (afterMeet ? 'Skip — nothing this time' : 'Cancel') + '</button></div>'
+    );
+    document.getElementById('noteSave').addEventListener('click', () => {
+      const t = document.getElementById('noteText').value.trim();
+      p.note = t || null;
+      save(); closeSheet(); render();
+      showToast(t ? '📝 Saved — it’ll resurface when you reach out.' : 'Note cleared.');
+    });
+    document.getElementById('noteSkip').addEventListener('click', () => {
+      if (afterMeet) { closeSheet(); showToast(p.name + ' — rhythm reset 🌱'); }
+      else openPerson(p.id);
+    });
+  }
+
+  /* ---------- composer ---------- */
+  const partTimes = { morning: ['9:00', '10:00', '11:00'], afternoon: ['13:00', '14:00', '15:00'], evening: ['18:00', '19:00', '20:00'] };
+  function defaultSlots() {
+    return [
+      { dateISO: nextDow(2, 2), part: 'evening', time: '19:00', on: true },   // next Tuesday evening
+      { dateISO: nextDow(6, 2), part: 'morning', time: '10:00', on: true },   // next Saturday morning
+      { dateISO: nextDow(0, 2), part: 'afternoon', time: '14:00', on: false }, // next Sunday afternoon
+    ];
+  }
+  function draftFor(p) {
+    if (p.members && p.members.length > 2) return 'Labas visi! 👋 Jau per ilgai — gal pagaliau susitinkam?';
+    if (p.members) return 'Labas jūs du! 👋 Jau per ilgai nesimatėm — gal susitinkam?';
+    return 'Labas, ' + firstName(p) + '! Jau per ilgai nesimatėm 🙂 Gal susitinkam?';
+  }
+  function inviteText(p, msg, slots, place) {
+    return msg + '\n\nKada tinka?\n' +
+      slots.map(s => '• ' + fmtLT(s.dateISO) + ', ' + s.time).join('\n') +
+      (place ? '\n📍 ' + place : '') +
+      '\n— ' + S.me.name;
+  }
+
+  function openComposer(p) {
+    const slots = defaultSlots();
+    let placeIdx = -1;
+    let customOpen = false;
+
+    openSheet(
+      '<h2>Invite ' + esc(p.name) + '</h2>' +
+      '<p class="sub">Drafted for you — edit anything, then share it your way</p>' +
+      (p.note ? '<div class="note-box"><div class="pb-label">📝 From last time</div>' + esc(p.note) + '</div>' : '') +
+      '<textarea class="compose-msg" id="msg">' + esc(draftFor(p)) + '</textarea>' +
+      '<div class="field-label">When <small>— tap a time to adjust it</small></div>' +
+      '<div class="slots" id="slots"></div>' +
+      '<div id="customWrap"></div>' +
+      '<div class="field-label">Where <small>— optional</small></div>' +
+      '<div class="places" id="places"></div>' +
+      '<p class="compose-note">The invite goes out as a normal message — WhatsApp, SMS, wherever. ' + esc(firstName(p)) + ' never sees your rhythm.</p>' +
+      '<div class="actions"><button class="btn primary" id="sendBtn">Preview &amp; share</button>' +
+      '<button class="btn quiet" id="backBtn">Back</button></div>'
+    );
+
+    const slotsEl = document.getElementById('slots');
+    const customWrap = document.getElementById('customWrap');
+    const placesEl = document.getElementById('places');
+
+    function renderSlots() {
+      slotsEl.innerHTML = slots.map((s, i) =>
+        '<div class="slot' + (s.on ? ' on' : '') + '">' +
+        '<button class="slot-main" data-i="' + i + '" aria-pressed="' + s.on + '">' +
+        '<span class="tick">' + (s.on ? '✓' : '') + '</span>' + esc(fmtDay(s.dateISO)) +
+        '<span class="part">' + esc(s.part) + '</span></button>' +
+        '<button class="time-pill" data-t="' + i + '" title="Tap to adjust time">~' + esc(s.time) + '</button>' +
+        '</div>'
+      ).join('');
+      slotsEl.querySelectorAll('.slot-main').forEach(el => {
+        el.addEventListener('click', () => { const s = slots[el.dataset.i]; s.on = !s.on; renderSlots(); });
+      });
+      slotsEl.querySelectorAll('.time-pill').forEach(el => {
+        el.addEventListener('click', () => {
+          const s = slots[el.dataset.t];
+          const opts = partTimes[s.part] || [s.time];
+          s.time = opts[(opts.indexOf(s.time) + 1) % opts.length];
+          s.on = true;
+          renderSlots();
+        });
+      });
+    }
+    function renderCustom() {
+      if (!customOpen) {
+        customWrap.innerHTML = '<button class="add-slot" id="addSlot">＋ Add a specific day &amp; time</button>';
+        document.getElementById('addSlot').addEventListener('click', () => { customOpen = true; renderCustom(); });
+        return;
+      }
+      let dayOpts = '';
+      for (let i = 1; i <= 21; i++) {
+        const d = addDaysISO(todayISO(), i);
+        dayOpts += '<option value="' + d + '">' + fmtDay(d) + '</option>';
+      }
+      customWrap.innerHTML =
+        '<div class="custom-slot"><select id="csDay">' + dayOpts + '</select>' +
+        '<input type="time" id="csTime" value="18:30">' +
+        '<button class="btn primary" id="csAdd">Add</button></div>';
+      document.getElementById('csAdd').addEventListener('click', () => {
+        const t = document.getElementById('csTime').value || '18:30';
+        slots.push({ dateISO: document.getElementById('csDay').value, part: 'exact', time: t, on: true });
+        customOpen = false;
+        renderSlots(); renderCustom();
+      });
+    }
+    function renderPlaces() {
+      const opts = ['🤝 Decide together'].concat(S.places);
+      placesEl.innerHTML = opts.map((pl, i) =>
+        '<button class="place' + ((i - 1) === placeIdx ? ' on' : '') + '" data-p="' + (i - 1) + '">' + esc(pl) + '</button>'
+      ).join('');
+      placesEl.querySelectorAll('.place').forEach(el => {
+        el.addEventListener('click', () => { placeIdx = +el.dataset.p; renderPlaces(); });
+      });
+    }
+    renderSlots(); renderCustom(); renderPlaces();
+
+    document.getElementById('backBtn').addEventListener('click', () => openPerson(p.id));
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const chosen = slots.filter(s => s.on);
+      if (!chosen.length) { showToast('Pick at least one time option'); return; }
+      const place = placeIdx >= 0 ? S.places[placeIdx].replace(/^\S+\s/, '') : null;
+      openShare(p, document.getElementById('msg').value.trim(), chosen, place);
+    });
+  }
+
+  function openShare(p, msg, chosen, place) {
+    const text = inviteText(p, msg, chosen, place);
+    const canShare = !!navigator.share;
+    openSheet(
+      '<h2>Ready to send</h2>' +
+      '<p class="sub">This is the message ' + esc(firstName(p)) + ' gets — nothing else.</p>' +
+      '<div class="preview-box">' + esc(text) + '</div>' +
+      '<div class="actions">' +
+      (canShare ? '<button class="btn primary" id="shareBtn">📤 &nbsp;Share…</button>' : '') +
+      '<button class="btn' + (canShare ? '' : ' primary') + '" id="copyBtn">📋 &nbsp;Copy message</button>' +
+      '<button class="btn quiet" id="shareBack">Back to editing</button></div>'
+    );
+    function markSent() {
+      p.invite = { sentISO: todayISO(), slots: chosen.map(s => ({ dateISO: s.dateISO, time: s.time })), place: place };
+      p.snooze = null;
+      save(); closeSheet(); render();
+      showToast('✉️ Invite marked as sent — I’ll hold ' + firstName(p) + ' in "waiting".');
+    }
+    const sb = document.getElementById('shareBtn');
+    if (sb) sb.addEventListener('click', () => {
+      navigator.share({ text: text }).then(markSent).catch(() => {});
+    });
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      copyText(text).then(ok => {
+        showToast(ok ? '📋 Copied — paste it to ' + firstName(p) : 'Copy failed — select the text manually');
+        markSent();
+      });
+    });
+    document.getElementById('shareBack').addEventListener('click', () => openComposer(p));
+  }
+
+  /* ---------- confirm reply ---------- */
+  function openConfirmReply(p) {
+    openSheet(
+      '<h2>' + esc(firstName(p)) + ' said yes 🎉</h2>' +
+      '<p class="sub">Which time did they pick?</p>' +
+      '<div class="slots">' +
+      p.invite.slots.map((s, i) =>
+        '<div class="slot on"><button class="slot-main" data-i="' + i + '">' +
+        '<span class="tick">✓</span>' + esc(fmtDay(s.dateISO)) +
+        '<span class="part">' + esc(s.time) + '</span></button></div>'
+      ).join('') +
+      '</div>' +
+      '<div class="actions"><button class="btn quiet" id="replyBack">Back</button></div>'
+    );
+    sheet.querySelectorAll('.slot-main').forEach(el => {
+      el.addEventListener('click', () => {
+        const s = p.invite.slots[el.dataset.i];
+        p.plan = { what: 'Susitikimas', emoji: '☕', dateISO: s.dateISO, time: s.time, place: p.invite.place || null };
+        p.invite = null;
+        save(); render();
+        openBooked(p);
+      });
+    });
+    document.getElementById('replyBack').addEventListener('click', () => openPerson(p.id));
+  }
+
+  function openBooked(p) {
+    openSheet(
+      '<div class="center-state"><div class="big-mark">🎉</div>' +
+      '<h2>' + esc(fmtDay(p.plan.dateISO)) + ' · ' + esc(p.plan.time) + '</h2>' +
+      '<p>' + esc(p.name) + (p.plan.place ? ' · 📍 ' + esc(p.plan.place) : '') + '<br>Rhythm alive.</p>' +
+      '<div class="actions">' +
+      '<button class="btn primary" id="bookIcs">📅 &nbsp;Add to calendar (.ics)</button>' +
+      '<button class="btn quiet" id="bookDone">Done</button></div></div>'
+    );
+    document.getElementById('bookIcs').addEventListener('click', () => {
+      download('susitikimas-' + firstName(p).toLowerCase() + '.ics', icsFor(p), 'text/calendar');
+      showToast('📅 Calendar file downloaded');
+    });
+    document.getElementById('bookDone').addEventListener('click', closeSheet);
+  }
+
+  /* ---------- add / edit ---------- */
+  function tagOptions() {
+    const tags = [];
+    S.people.forEach(p => { if (!tags.includes(p.tag)) tags.push(p.tag); });
+    ['šeima', 'draugai', 'darbo draugai'].forEach(t => { if (!tags.includes(t)) tags.push(t); });
+    return tags;
+  }
+
+  function openAddSheet() { openPersonForm(null); }
+  function openEditSheet(p) { openPersonForm(p); }
+
+  function openPersonForm(existing) {
+    const tagOpts = tagOptions();
+    let mode = existing ? (existing.members ? 'group' : 'person') : 'person';
+    let tagIdx = existing ? tagOpts.indexOf(existing.tag) : Math.max(0, tagOpts.indexOf('draugai'));
+    if (tagIdx < 0) tagIdx = 0;
+    let members = existing && existing.members ? existing.members.slice() : [];
+    const knownNames = [];
+    S.people.forEach(p => { if (!p.members && !knownNames.includes(p.name)) knownNames.push(p.name); });
+
+    function renderForm(keepName) {
+      const rhythmVal = existing ? existing.rhythm : 21;
+      openSheet(
+        (existing ? '<h2>Edit ' + esc(existing.name) + '</h2>' :
+          '<div class="seg">' +
+          '<button id="segP" class="' + (mode === 'person' ? 'on' : '') + '">👤 Person</button>' +
+          '<button id="segG" class="' + (mode === 'group' ? 'on' : '') + '">👥 Group</button></div>') +
+        '<p class="sub">Rhythm, tag and notes stay private to you</p>' +
+        '<div class="form-grid">' +
+        '<label>' + (mode === 'group' ? 'Group name' : 'Name') +
+        '<input id="fName" placeholder="' + (mode === 'group' ? 'e.g. Knygų klubas' : 'e.g. Justina') + '" maxlength="40"></label>' +
+        '</div>' +
+        (mode === 'group'
+          ? '<div class="field-label">Who’s in</div>' +
+            '<div class="members" id="fMembers"></div>' +
+            '<div class="custom-slot" style="margin-top:0.5rem">' +
+            '<input id="fMemberNew" placeholder="add a person…" maxlength="30" style="flex:1;min-width:0">' +
+            '<button class="btn primary" id="fMemberAdd">Add</button></div>'
+          : '') +
+        '<div class="form-grid" style="margin-top:0.9rem">' +
+        '<label>How often would you genuinely like to meet?<select id="fRhythm">' +
+        [[7, 'Every week'], [14, 'Every 2 weeks'], [21, 'Every 3 weeks'], [30, 'Monthly'], [42, 'Every 6 weeks'], [90, 'Quarterly'], [180, 'Twice a year']]
+          .map(o => '<option value="' + o[0] + '"' + (o[0] === rhythmVal ? ' selected' : '') + '>' + o[1] + '</option>').join('') +
+        '</select></label></div>' +
+        '<div class="field-label">Tag <small>— pick one, only you see it</small></div>' +
+        '<div class="places" id="fTags"></div>' +
+        '<div id="fCustomWrap"></div>' +
+        '<div class="actions"><button class="btn primary" id="fSave">' + (existing ? 'Save changes' : 'Start the rhythm') + '</button>' +
+        (existing ? '<button class="btn danger" id="fDelete">Remove ' + (mode === 'group' ? 'group' : 'person') + '</button>' : '') +
+        '<button class="btn quiet" id="fCancel">Cancel</button></div>'
+      );
+      document.getElementById('fName').value = keepName != null ? keepName : (existing ? existing.name : '');
+
+      if (!existing) {
+        document.getElementById('segP').addEventListener('click', () => {
+          if (mode === 'person') return; mode = 'person'; renderForm(document.getElementById('fName').value.trim());
+        });
+        document.getElementById('segG').addEventListener('click', () => {
+          if (mode === 'group') return; mode = 'group'; renderForm(document.getElementById('fName').value.trim());
+        });
+      }
+
+      if (mode === 'group') {
+        const membersEl = document.getElementById('fMembers');
+        function renderMembers() {
+          const all = knownNames.filter(n => !members.includes(n)).concat(members);
+          membersEl.innerHTML = all.length
+            ? all.map(m => memberChip(m, true, members.includes(m))).join('')
+            : '<span style="font-size:0.82rem;color:var(--ink-soft)">Add people below</span>';
+          membersEl.querySelectorAll('.member.pick').forEach(el => {
+            const toggle = () => {
+              const n = el.dataset.name;
+              members = members.includes(n) ? members.filter(x => x !== n) : members.concat(n);
+              renderMembers();
+            };
+            el.addEventListener('click', toggle);
+            el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+          });
+        }
+        renderMembers();
+        document.getElementById('fMemberAdd').addEventListener('click', () => {
+          const inp = document.getElementById('fMemberNew');
+          const n = inp.value.trim();
+          if (!n) return;
+          if (!members.includes(n)) members = members.concat(n);
+          inp.value = '';
+          renderMembers();
+        });
+      }
+
+      const tagsEl = document.getElementById('fTags');
+      const customWrap = document.getElementById('fCustomWrap');
+      function renderTags() {
+        tagsEl.innerHTML = tagOpts.map((t, i) =>
+          '<button class="place' + (i === tagIdx ? ' on' : '') + '" data-i="' + i + '">' + esc(t) + '</button>'
+        ).join('') +
+        '<button class="place' + (tagIdx === -1 ? ' on' : '') + '" data-i="-1">＋ kita…</button>';
+        tagsEl.querySelectorAll('.place').forEach(el => {
+          el.addEventListener('click', () => {
+            tagIdx = +el.dataset.i;
+            if (tagIdx === -1) {
+              customWrap.innerHTML = '<div class="custom-slot" style="margin-top:0.5rem">' +
+                '<input id="fTagNew" placeholder="e.g. teniso klubas" maxlength="30" style="flex:1;min-width:0"></div>';
+              customWrap.querySelector('#fTagNew').focus();
+            } else customWrap.innerHTML = '';
+            renderTags();
+          });
+        });
+      }
+      renderTags();
+
+      document.getElementById('fCancel').addEventListener('click', () => { existing ? openPerson(existing.id) : closeSheet(); });
+      const fd = document.getElementById('fDelete');
+      if (fd) fd.addEventListener('click', () => {
+        openSheet(
+          '<div class="center-state"><div class="big-mark">🍂</div>' +
+          '<h2>Remove ' + esc(existing.name) + '?</h2>' +
+          '<p>The rhythm, notes and history go too. This can’t be undone.</p>' +
+          '<div class="actions"><button class="btn danger" id="delYes">Yes, remove</button>' +
+          '<button class="btn quiet" id="delNo">Keep</button></div></div>'
+        );
+        document.getElementById('delYes').addEventListener('click', () => {
+          S.people = S.people.filter(x => x.id !== existing.id);
+          save(); closeSheet(); render();
+          showToast(existing.name + ' removed.');
+        });
+        document.getElementById('delNo').addEventListener('click', () => openEditSheet(existing));
+      });
+
+      document.getElementById('fSave').addEventListener('click', () => {
+        const name = document.getElementById('fName').value.trim();
+        if (!name) { showToast(mode === 'group' ? 'Give the group a name 🙂' : 'Give them a name 🙂'); return; }
+        if (mode === 'group' && members.length < 2) { showToast('A group needs at least 2 people'); return; }
+        let tag;
+        if (tagIdx === -1) {
+          const el = document.getElementById('fTagNew');
+          tag = el ? el.value.trim() : '';
+          if (!tag) { showToast('Name the new tag — or pick one'); return; }
+        } else tag = tagOpts[tagIdx];
+        const rhythm = +document.getElementById('fRhythm').value;
+
+        if (existing) {
+          existing.name = name; existing.tag = tag; existing.rhythm = rhythm;
+          if (mode === 'group') existing.members = members.slice();
+          save(); closeSheet(); render();
+          showToast('Saved.');
+        } else {
+          S.people.push({
+            id: uid(), name: name,
+            members: mode === 'group' ? members.slice() : undefined,
+            hue: Math.floor(Math.random() * 360),
+            tag: tag, rhythm: rhythm, lastMet: null,
+          });
+          save(); closeSheet(); render();
+          showToast(name + ' added — say hi whenever you’re ready.');
+        }
+      });
+    }
+    renderForm();
+  }
+
+  /* ---------- settings ---------- */
+  function openSettings() {
+    openSheet(
+      '<h2>Settings</h2>' +
+      '<p class="sub">Everything lives on this device — nothing is uploaded anywhere.</p>' +
+      '<div class="form-grid"><label>Your name — signs your invites<input id="sName" maxlength="30" value="' + esc(S.me.name) + '"></label></div>' +
+      '<div class="field-label">Favourite places <small>— quick picks when inviting</small></div>' +
+      '<div id="sPlaces"></div>' +
+      '<div class="custom-slot" style="margin-top:0.4rem">' +
+      '<input id="sPlaceNew" placeholder="e.g. 🍰 Pas Antaną" maxlength="40" style="flex:1;min-width:0">' +
+      '<button class="btn primary" id="sPlaceAdd">Add</button></div>' +
+      '<div class="field-label">Your data</div>' +
+      '<div class="actions" style="margin-top:0.2rem">' +
+      '<button class="btn" id="sExport">⬇️ &nbsp;Export backup (.json)</button>' +
+      '<button class="btn" id="sImport">⬆️ &nbsp;Import backup</button>' +
+      '<input type="file" id="sImportFile" accept=".json,application/json" style="display:none">' +
+      '<button class="btn danger" id="sWipe">Erase everything</button>' +
+      '<button class="btn primary" id="sSave">Save settings</button></div>'
+    );
+    const placesEl = document.getElementById('sPlaces');
+    function renderPlaces() {
+      placesEl.innerHTML = S.places.map((pl, i) =>
+        '<div class="settings-row"><span class="grow">' + esc(pl) + '</span>' +
+        '<button class="x-btn" data-i="' + i + '" aria-label="Remove place">×</button></div>'
+      ).join('') || '<p class="sub">No places yet — add your favourites below.</p>';
+      placesEl.querySelectorAll('.x-btn').forEach(el => {
+        el.addEventListener('click', () => { S.places.splice(+el.dataset.i, 1); save(); renderPlaces(); });
+      });
+    }
+    renderPlaces();
+    document.getElementById('sPlaceAdd').addEventListener('click', () => {
+      const inp = document.getElementById('sPlaceNew');
+      const v = inp.value.trim();
+      if (!v) return;
+      S.places.push(v); inp.value = ''; save(); renderPlaces();
+    });
+    document.getElementById('sSave').addEventListener('click', () => {
+      S.me.name = document.getElementById('sName').value.trim() || S.me.name;
+      save(); closeSheet(); render(); showToast('Saved.');
+    });
+    document.getElementById('sExport').addEventListener('click', () => {
+      download('susitinkam-dazniau-backup-' + todayISO() + '.json', JSON.stringify(S, null, 2), 'application/json');
+      showToast('⬇️ Backup downloaded');
+    });
+    document.getElementById('sImport').addEventListener('click', () => document.getElementById('sImportFile').click());
+    document.getElementById('sImportFile').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const data = JSON.parse(r.result);
+          if (!data.people || !data.me) throw new Error('bad');
+          S = data; save(); closeSheet(); render();
+          showToast('⬆️ Backup restored — ' + S.people.length + ' rhythms.');
+        } catch (err) { showToast('That file doesn’t look like a backup.'); }
+      };
+      r.readAsText(f);
+    });
+    document.getElementById('sWipe').addEventListener('click', () => {
+      openSheet(
+        '<div class="center-state"><div class="big-mark">🗑️</div>' +
+        '<h2>Erase everything?</h2><p>All rhythms, notes and plans on this device. This can’t be undone.</p>' +
+        '<div class="actions"><button class="btn danger" id="wipeYes">Yes, erase</button>' +
+        '<button class="btn quiet" id="wipeNo">Keep my data</button></div></div>'
+      );
+      document.getElementById('wipeYes').addEventListener('click', () => {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        S = null; closeSheet(); render();
+      });
+      document.getElementById('wipeNo').addEventListener('click', openSettings);
+    });
+  }
+
+  render();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</html>
