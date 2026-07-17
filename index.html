@@ -13,8 +13,8 @@
 <title>Susitinkam dažniau</title>
 <style>
   :root {
-    --paper: #eef0ea;
-    --screen: #f7f8f4;
+    --paper: #f1f0e9;
+    --screen: #faf9f4;
     --card: #ffffff;
     --ink: #20261f;
     --ink-soft: #5b6552;
@@ -23,22 +23,11 @@
     --spruce-soft: #e2ebde;
     --amber: #b97f1e;
     --amber-soft: #f6ecd2;
-    --line: #dde2d6;
+    --line: #e2e3d8;
     --good: #2e7d4f;
     --due: #c98d1f;
     --late: #b5502c;
-    --shadow: 0 18px 50px rgba(32, 38, 31, 0.16);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --paper: #11140f; --screen: #191e17; --card: #21281f;
-      --ink: #e6e9e0; --ink-soft: #9aa48f;
-      --spruce: #8cc2a6; --spruce-ink: #a4d4ba; --spruce-soft: #26332b;
-      --amber: #dcae52; --amber-soft: #3a3320;
-      --line: #333d2f;
-      --good: #6fbf8f; --due: #dcae52; --late: #d97f57;
-      --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
-    }
+    --shadow: 0 18px 50px rgba(32, 38, 31, 0.10);
   }
   :root[data-theme="dark"] {
     --paper: #11140f; --screen: #191e17; --card: #21281f;
@@ -102,7 +91,6 @@
   }
   .bar-btn.add { margin-left: auto; background: var(--spruce); border-color: var(--spruce); color: #fff; font-size: 1.3rem; }
   :root[data-theme="dark"] .bar-btn.add { color: #14201a; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bar-btn.add { color: #14201a; } }
 
   .stats { display: flex; gap: 0.4rem; padding: 0.35rem 1.2rem 0.55rem; flex-wrap: wrap; }
   .stat {
@@ -137,10 +125,24 @@
     border-radius: 16px; padding: 0.8rem 0.9rem; margin-bottom: 0.55rem;
     display: flex; align-items: center; gap: 0.75rem;
     transition: transform 0.12s ease;
+    animation: rise 0.45s cubic-bezier(0.22, 0.9, 0.36, 1) backwards;
   }
   .person:active { transform: scale(0.985); }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+  }
 
-  .ring { width: 50px; height: 50px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  @property --pct {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+  }
+  .ring {
+    width: 50px; height: 50px; flex: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: conic-gradient(var(--ring-c, var(--line)) var(--pct, 100%), var(--line) 0);
+    transition: --pct 0.9s cubic-bezier(0.22, 0.9, 0.36, 1);
+  }
   .avatar {
     width: 41px; height: 41px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -188,7 +190,7 @@
   }
   .overlay.open .sheet { transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) {
-    .sheet, .overlay, .person, .toast { transition: none !important; }
+    .sheet, .overlay, .person, .toast, .ring { transition: none !important; animation: none !important; }
   }
   .grabber { width: 38px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto 0.9rem; }
 
@@ -225,7 +227,6 @@
   }
   .btn.primary { background: var(--spruce); color: #fff; border-color: var(--spruce); }
   :root[data-theme="dark"] .btn.primary { color: #14201a; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #14201a; } }
   .btn.quiet { color: var(--ink-soft); font-weight: 500; }
   .btn.danger { color: var(--late); }
   .btn:active { transform: scale(0.985); }
@@ -255,7 +256,6 @@
   .slot.on { border-color: var(--spruce); }
   .slot.on .tick { background: var(--spruce); border-color: var(--spruce); }
   :root[data-theme="dark"] .slot.on .tick { color: #14201a; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .slot.on .tick { color: #14201a; } }
   .slot .part { color: var(--ink-soft); font-size: 0.8rem; }
   .time-pill {
     margin-left: auto; font-size: 0.82rem; font-weight: 600;
@@ -512,8 +512,16 @@
 
   function avatarHtml(p, big) {
     const spec = ringSpec(p);
-    return '<span class="ring" style="background: conic-gradient(' + spec.color + ' ' + spec.pct + '%, var(--line) 0)">' +
+    return '<span class="ring" data-pct="' + spec.pct + '" style="--ring-c: ' + spec.color + '; --pct: 0%">' +
       '<span class="avatar' + (big ? ' big' : '') + '">' + photoFor(p) + '</span></span>';
+  }
+  // fill the rings on the next frame so the conic gradient animates in
+  function animateRings(root) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      (root || document).querySelectorAll('.ring[data-pct]').forEach(el => {
+        el.style.setProperty('--pct', el.dataset.pct + '%');
+      });
+    }));
   }
   function memberChip(name, pickable, on) {
     const bg = 'color-mix(in oklab, hsl(' + hueOf(name) + ' 60% 55%) 25%, var(--card))';
@@ -551,7 +559,7 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
   }
-  function openSheet(html) { sheet.innerHTML = '<div class="grabber"></div>' + html; overlay.classList.add('open'); }
+  function openSheet(html) { sheet.innerHTML = '<div class="grabber"></div>' + html; overlay.classList.add('open'); animateRings(sheet); }
   function closeSheet() { overlay.classList.remove('open'); }
   overlay.addEventListener('click', e => { if (e.target === overlay) closeSheet(); });
 
@@ -656,7 +664,11 @@
     document.getElementById('settingsBtn').addEventListener('click', openSettings);
     const ea = document.getElementById('emptyAdd');
     if (ea) ea.addEventListener('click', () => openAddSheet());
-    app.querySelectorAll('.person').forEach(btn => btn.addEventListener('click', () => openPerson(btn.dataset.id)));
+    app.querySelectorAll('.person').forEach((btn, i) => {
+      btn.style.animationDelay = (i * 70) + 'ms';
+      btn.addEventListener('click', () => openPerson(btn.dataset.id));
+    });
+    animateRings(app);
   }
 
   function row(p) {
