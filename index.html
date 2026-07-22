@@ -335,6 +335,37 @@
   }
   .seg button.on { border-color: var(--spruce); background: var(--spruce-soft); color: var(--spruce-ink); }
 
+  /* friend reply view (opened from an invite link) */
+  .fv { padding: 2.2rem 1.4rem 2rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .fv .from-avatar {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--spruce-soft); color: var(--spruce-ink);
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: 1.6rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0.8rem;
+  }
+  .fv h1 {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: 1.5rem; font-weight: 600; margin: 0 0 0.8rem; text-wrap: balance;
+  }
+  .fv-msg {
+    background: var(--spruce-soft); border-radius: 14px;
+    padding: 0.85rem 1.1rem; font-size: 0.97rem; text-align: left;
+    margin-bottom: 0.6rem; width: 100%; white-space: pre-wrap;
+  }
+  .fv-place { color: var(--ink-soft); font-size: 0.9rem; margin: 0 0 1.1rem; }
+  .fv-slots { display: grid; gap: 0.5rem; width: 100%; margin-bottom: 0.9rem; }
+  .fv-slot {
+    border: 1.5px solid var(--line); background: var(--card);
+    border-radius: 12px; padding: 0.8rem; font-weight: 600; font-size: 0.98rem;
+    text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .fv-slot:active { transform: scale(0.985); }
+  .fv-alt { font-size: 0.85rem; color: var(--ink-soft); text-decoration: underline; margin-bottom: 1.4rem; }
+  .fv-foot { font-size: 0.76rem; color: var(--ink-soft); margin-top: auto; padding-top: 1.6rem; }
+  .fv-foot a { color: var(--spruce); font-weight: 600; text-decoration: none; }
+
   .settings-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; }
   .settings-row .grow { flex: 1; min-width: 0; }
   .x-btn { color: var(--late); font-weight: 700; padding: 0.2rem 0.5rem; }
@@ -812,10 +843,23 @@
     if (p.members) return 'Labas jūs du! 👋 Jau per ilgai nesimatėm — gal susitinkam?';
     return 'Labas, ' + firstName(p) + '! Jau per ilgai nesimatėm 🙂 Gal susitinkam?';
   }
+  /* the whole invite is encoded in the link itself — no server needed */
+  function b64uEncode(obj) {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function b64uDecode(str) {
+    return JSON.parse(decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/')))));
+  }
+  function inviteLink(msg, slots, place) {
+    const payload = { f: S.me.name, m: msg, s: slots.map(s => [s.dateISO, s.time]), p: place || null };
+    return location.origin + location.pathname + '#i=' + b64uEncode(payload);
+  }
   function inviteText(p, msg, slots, place) {
     return msg + '\n\nKada tinka?\n' +
       slots.map(s => '• ' + fmtLT(s.dateISO) + ', ' + s.time).join('\n') +
       (place ? '\n📍 ' + place : '') +
+      '\n\n👉 Išsirink laiką čia:\n' + inviteLink(msg, slots, place) +
       '\n— ' + S.me.name;
   }
 
@@ -1215,7 +1259,91 @@
     });
   }
 
-  render();
+  /* ---------- friend view: opened via #i=<invite> link ---------- */
+  function friendIcs(from, dateISO, time, place) {
+    const dt = dateISO.replace(/-/g, '');
+    const hm = time.split(':');
+    const start = dt + 'T' + String(hm[0]).padStart(2, '0') + String(hm[1] || '00').padStart(2, '0') + '00';
+    const endD = fromISO(dateISO);
+    endD.setHours(+hm[0], +(hm[1] || 0) + 90);
+    const end = toISO(endD).replace(/-/g, '') + 'T' + String(endD.getHours()).padStart(2, '0') + String(endD.getMinutes()).padStart(2, '0') + '00';
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Susitinkam dazniau//LT',
+      'BEGIN:VEVENT',
+      'UID:invite-' + dt + '-' + hm[0] + '@susitinkam',
+      'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+      'DTSTART:' + start, 'DTEND:' + end,
+      'SUMMARY:Susitikimas su ' + from,
+      place ? 'LOCATION:' + place : null,
+      'END:VEVENT', 'END:VCALENDAR'].filter(Boolean).join('\r\n');
+  }
+
+  function renderFriendView(pl) {
+    const from = pl.f || 'Draugas';
+    const appUrl = location.origin + location.pathname;
+    function frame(inner) {
+      app.innerHTML = '<div class="fv">' + inner +
+        '<p class="fv-foot">Sukurta su <a href="' + appUrl + '">Susitinkam dažniau</a> — „susitinkam dažniau“ šįkart iš tikrųjų.</p></div>';
+    }
+    function showPicker() {
+      frame(
+        '<div class="from-avatar">' + esc(initials(from)) + '</div>' +
+        '<h1>' + esc(from) + ' kviečia susitikti ☕</h1>' +
+        '<div class="fv-msg">' + esc(pl.m || '') + '</div>' +
+        (pl.p ? '<p class="fv-place">📍 ' + esc(pl.p) + '</p>' : '') +
+        '<div class="fv-slots">' +
+        pl.s.map((s, i) => '<button class="fv-slot" data-i="' + i + '">' + esc(fmtLT(s[0])) + ' · ' + esc(s[1]) + '</button>').join('') +
+        '</div>' +
+        '<button class="fv-alt" id="fvNone">Nė vienas laikas netinka</button>'
+      );
+      app.querySelectorAll('.fv-slot').forEach(el => {
+        el.addEventListener('click', () => showConfirm(pl.s[el.dataset.i]));
+      });
+      document.getElementById('fvNone').addEventListener('click', () => showReply(
+        null, 'Labas! Šitie laikai man, deja, netinka 😔 Bet susitikti labai noriu — gal kitą savaitę?'));
+    }
+    function showConfirm(slot) {
+      showReply(slot, 'Man tinka ' + fmtLT(slot[0]) + ', ' + slot[1] + ' ✅ Iki susitikimo!');
+    }
+    function showReply(slot, replyText) {
+      frame(
+        '<div class="from-avatar">' + (slot ? '🎉' : '💛') + '</div>' +
+        '<h1>' + (slot ? esc(fmtLT(slot[0])) + ' · ' + esc(slot[1]) : 'Ačiū už atsakymą!') + '</h1>' +
+        '<p class="sub" style="margin-bottom:0.9rem">Nusiųsk atsakymą ' + esc(from) + ' — žinutė jau paruošta:</p>' +
+        '<div class="fv-msg" id="fvReply">' + esc(replyText) + '</div>' +
+        '<div class="actions" style="width:100%">' +
+        (navigator.share ? '<button class="btn primary" id="fvShare">📤 &nbsp;Siųsti atsakymą</button>' : '') +
+        '<button class="btn' + (navigator.share ? '' : ' primary') + '" id="fvCopy">📋 &nbsp;Kopijuoti žinutę</button>' +
+        (slot ? '<button class="btn" id="fvIcs">📅 &nbsp;Įsidėti į kalendorių</button>' : '') +
+        '<button class="btn quiet" id="fvBack">← Atgal</button></div>'
+      );
+      const sb = document.getElementById('fvShare');
+      if (sb) sb.addEventListener('click', () => navigator.share({ text: replyText }).catch(() => {}));
+      document.getElementById('fvCopy').addEventListener('click', () => {
+        copyText(replyText).then(ok => showToast(ok ? '📋 Nukopijuota — įklijuok žinutėje ' + from : 'Nepavyko nukopijuoti'));
+      });
+      const ib = document.getElementById('fvIcs');
+      if (ib) ib.addEventListener('click', () => {
+        download('susitikimas-su-' + from.toLowerCase().replace(/\s+/g, '-') + '.ics',
+          friendIcs(from, slot[0], slot[1], pl.p), 'text/calendar');
+        showToast('📅 Kalendoriaus failas atsisiųstas');
+      });
+      document.getElementById('fvBack').addEventListener('click', showPicker);
+    }
+    showPicker();
+  }
+
+  function tryFriendView() {
+    const m = location.hash.match(/^#i=([A-Za-z0-9_-]+)/);
+    if (!m) return false;
+    try {
+      const pl = b64uDecode(m[1]);
+      if (!pl || !Array.isArray(pl.s) || !pl.s.length) return false;
+      renderFriendView(pl);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  if (!tryFriendView()) render();
 })();
 </script>
 
