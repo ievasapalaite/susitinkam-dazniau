@@ -853,6 +853,7 @@
   }
   function inviteLink(msg, slots, place) {
     const payload = { f: S.me.name, m: msg, s: slots.map(s => [s.dateISO, s.time]), p: place || null };
+    if (S.me.email) payload.e = S.me.email;
     return location.origin + location.pathname + '#i=' + b64uEncode(payload);
   }
   function inviteText(p, msg, slots, place) {
@@ -1190,7 +1191,8 @@
     openSheet(
       '<h2>Settings</h2>' +
       '<p class="sub">Everything lives on this device — nothing is uploaded anywhere.</p>' +
-      '<div class="form-grid"><label>Your name — signs your invites<input id="sName" maxlength="30" value="' + esc(S.me.name) + '"></label></div>' +
+      '<div class="form-grid"><label>Your name — signs your invites<input id="sName" maxlength="30" value="' + esc(S.me.name) + '"></label>' +
+      '<label>Your email — when a friend books the time in Google Calendar, the invite reaches you automatically<input id="sEmail" type="email" maxlength="60" placeholder="tavo@pastas.lt" value="' + esc(S.me.email || '') + '"></label></div>' +
       '<div class="field-label">Favourite places <small>— quick picks when inviting</small></div>' +
       '<div id="sPlaces"></div>' +
       '<div class="custom-slot" style="margin-top:0.4rem">' +
@@ -1223,6 +1225,7 @@
     });
     document.getElementById('sSave').addEventListener('click', () => {
       S.me.name = document.getElementById('sName').value.trim() || S.me.name;
+      S.me.email = document.getElementById('sEmail').value.trim() || null;
       save(); closeSheet(); render(); showToast('Saved.');
     });
     document.getElementById('sExport').addEventListener('click', () => {
@@ -1305,6 +1308,20 @@
       showReply(slot, 'Man tinka ' + fmtLT(slot[0]) + ', ' + slot[1] + ' ✅ Iki susitikimo!');
     }
     function showReply(slot, replyText) {
+      let gcal = null;
+      if (slot && pl.e) {
+        const hm = slot[1].split(':');
+        const start = slot[0].replace(/-/g, '') + 'T' + String(hm[0]).padStart(2, '0') + String(hm[1] || '00').padStart(2, '0') + '00';
+        const endD = fromISO(slot[0]);
+        endD.setHours(+hm[0], +(hm[1] || 0) + 90);
+        const end = toISO(endD).replace(/-/g, '') + 'T' + String(endD.getHours()).padStart(2, '0') + String(endD.getMinutes()).padStart(2, '0') + '00';
+        gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+          '&text=' + encodeURIComponent('☕ Susitikimas su ' + from) +
+          '&dates=' + start + '/' + end +
+          (pl.p ? '&location=' + encodeURIComponent(pl.p) : '') +
+          '&add=' + encodeURIComponent(pl.e) +
+          '&details=' + encodeURIComponent('Sutarta per „Susitinkam dažniau“ 🌲');
+      }
       frame(
         '<div class="from-avatar">' + (slot ? '🎉' : '💛') + '</div>' +
         '<h1>' + (slot ? esc(fmtLT(slot[0])) + ' · ' + esc(slot[1]) : 'Ačiū už atsakymą!') + '</h1>' +
@@ -1313,8 +1330,10 @@
         '<div class="actions" style="width:100%">' +
         (navigator.share ? '<button class="btn primary" id="fvShare">📤 &nbsp;Siųsti atsakymą</button>' : '') +
         '<button class="btn' + (navigator.share ? '' : ' primary') + '" id="fvCopy">📋 &nbsp;Kopijuoti žinutę</button>' +
-        (slot ? '<button class="btn" id="fvIcs">📅 &nbsp;Įsidėti į kalendorių</button>' : '') +
-        '<button class="btn quiet" id="fvBack">← Atgal</button></div>'
+        (gcal ? '<a class="btn" href="' + gcal + '" target="_blank" rel="noopener" style="display:block;text-decoration:none">📅 &nbsp;Google Calendar — pakvies ir ' + esc(from) + '</a>' : '') +
+        (slot ? '<button class="btn" id="fvIcs">📅 &nbsp;Atsisiųsti .ics</button>' : '') +
+        '<button class="btn quiet" id="fvBack">← Atgal</button></div>' +
+        (gcal ? '<p class="fv-place" style="margin-top:0.8rem">Išsaugojus Google kalendoriuje, ' + esc(from) + ' automatiškai gaus pakvietimą ✉️</p>' : '')
       );
       const sb = document.getElementById('fvShare');
       if (sb) sb.addEventListener('click', () => navigator.share({ text: replyText }).catch(() => {}));
