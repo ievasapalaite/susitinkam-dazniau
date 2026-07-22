@@ -854,6 +854,7 @@
   function inviteLink(msg, slots, place) {
     const payload = { f: S.me.name, m: msg, s: slots.map(s => [s.dateISO, s.time]), p: place || null };
     if (S.me.email) payload.e = S.me.email;
+    if (S.me.phone) payload.t = S.me.phone;
     return location.origin + location.pathname + '#i=' + b64uEncode(payload);
   }
   function inviteText(p, msg, slots, place) {
@@ -1192,7 +1193,8 @@
       '<h2>Settings</h2>' +
       '<p class="sub">Everything lives on this device — nothing is uploaded anywhere.</p>' +
       '<div class="form-grid"><label>Your name — signs your invites<input id="sName" maxlength="30" value="' + esc(S.me.name) + '"></label>' +
-      '<label>Your email — when a friend books the time in Google Calendar, the invite reaches you automatically<input id="sEmail" type="email" maxlength="60" placeholder="tavo@pastas.lt" value="' + esc(S.me.email || '') + '"></label></div>' +
+      '<label>Your email — when a friend books the time in Google Calendar, the invite reaches you automatically<input id="sEmail" type="email" maxlength="60" placeholder="tavo@pastas.lt" value="' + esc(S.me.email || '') + '"></label>' +
+      '<label>Your phone — friends reply with one tap, straight into your chat<input id="sPhone" type="tel" maxlength="20" placeholder="+370 600 00000" value="' + esc(S.me.phone || '') + '"></label></div>' +
       '<div class="field-label">Favourite places <small>— quick picks when inviting</small></div>' +
       '<div id="sPlaces"></div>' +
       '<div class="custom-slot" style="margin-top:0.4rem">' +
@@ -1226,6 +1228,7 @@
     document.getElementById('sSave').addEventListener('click', () => {
       S.me.name = document.getElementById('sName').value.trim() || S.me.name;
       S.me.email = document.getElementById('sEmail').value.trim() || null;
+      S.me.phone = document.getElementById('sPhone').value.replace(/[^\d+]/g, '') || null;
       save(); closeSheet(); render(); showToast('Saved.');
     });
     document.getElementById('sExport').addEventListener('click', () => {
@@ -1322,16 +1325,28 @@
           '&add=' + encodeURIComponent(pl.e) +
           '&details=' + encodeURIComponent('Sutarta per „Susitinkam dažniau“ 🌲');
       }
+      const tel = pl.t ? String(pl.t).replace(/[^\d+]/g, '') : null;
+      const enc = encodeURIComponent(replyText);
+      // 'sms:...?&body=' opens the sender's thread with the reply pre-typed on both iOS and Android
+      const smsUrl = tel ? 'sms:' + tel + '?&body=' + enc : null;
+      const waUrl = tel ? 'https://wa.me/' + tel.replace(/\D/g, '') + '?text=' + enc : null;
+      copyText(replyText); // safety net: the reply is already on the clipboard
       frame(
         '<div class="from-avatar">' + (slot ? '🎉' : '💛') + '</div>' +
         '<h1>' + (slot ? esc(fmtLT(slot[0])) + ' · ' + esc(slot[1]) : 'Ačiū už atsakymą!') + '</h1>' +
-        '<p class="sub" style="margin-bottom:0.9rem">Nusiųsk atsakymą ' + esc(from) + ' — žinutė jau paruošta:</p>' +
+        '<p class="sub" style="margin-bottom:0.9rem">' +
+        (tel ? 'Beliko vienas paspaudimas — žinutė ' + esc(from) + ' jau paruošta:'
+             : 'Nusiųsk atsakymą ' + esc(from) + ' — žinutė jau paruošta ir nukopijuota:') + '</p>' +
         '<div class="fv-msg" id="fvReply">' + esc(replyText) + '</div>' +
         '<div class="actions" style="width:100%">' +
-        (navigator.share ? '<button class="btn primary" id="fvShare">📤 &nbsp;Siųsti atsakymą</button>' : '') +
-        '<button class="btn' + (navigator.share ? '' : ' primary') + '" id="fvCopy">📋 &nbsp;Kopijuoti žinutę</button>' +
+        (tel
+          ? '<a class="btn primary" href="' + smsUrl + '" style="display:block;text-decoration:none">💬 &nbsp;Atsakyti ' + esc(from) + ' žinute</a>' +
+            '<a class="btn" href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;text-decoration:none">🟢 &nbsp;Per WhatsApp</a>'
+          : (navigator.share ? '<button class="btn primary" id="fvShare">📤 &nbsp;Siųsti atsakymą</button>' : '') +
+            '<button class="btn' + (navigator.share ? '' : ' primary') + '" id="fvCopy">📋 &nbsp;Kopijuoti žinutę</button>') +
         (gcal ? '<a class="btn" href="' + gcal + '" target="_blank" rel="noopener" style="display:block;text-decoration:none">📅 &nbsp;Google Calendar — pakvies ir ' + esc(from) + '</a>' : '') +
         (slot ? '<button class="btn" id="fvIcs">📅 &nbsp;Atsisiųsti .ics</button>' : '') +
+        (tel ? '<button class="btn quiet" id="fvCopy">📋 &nbsp;Kopijuoti žinutę</button>' : '') +
         '<button class="btn quiet" id="fvBack">← Atgal</button></div>' +
         (gcal ? '<p class="fv-place" style="margin-top:0.8rem">Išsaugojus Google kalendoriuje, ' + esc(from) + ' automatiškai gaus pakvietimą ✉️</p>' : '')
       );
